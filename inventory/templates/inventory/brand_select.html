@@ -1,0 +1,73 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h2 class="mb-3 text-center">Select Brand</h2>
+            <p class="text-center text-muted">Select one or more brands to begin</p>
+
+            <!-- Brand Search Input -->
+            <!-- REMOVED 'onkeyup', added id 'brandSearch' -->
+            <input type="text" id="brandSearch" class="form-control mb-3 p-3" 
+                   placeholder="Type to filter brands (e.g. Ariston)...">
+
+            <form action="{% url 'product_search' %}" method="get">
+                
+                <div class="list-group mb-3 shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                    {% for brand in brands %}
+                    <!-- Added 'brand-item' class -->
+                    <label class="list-group-item d-flex gap-3 brand-item align-items-center">
+                        <input class="form-check-input flex-shrink-0" type="checkbox" name="brands" value="{{ brand.id }}">
+                        <!-- Added class 'brand-name' to span for easy finding -->
+                        <span class="brand-name">
+                            {{ brand.name }}
+                        </span>
+                    </label>
+                    {% empty %}
+                    <div class="p-3 text-center">No brands found. Upload Excel first.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        START COUNTING SELECTED &rarr;
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Wait for the page to be ready
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        const searchInput = document.getElementById('brandSearch');
+        const items = document.querySelectorAll('.brand-item');
+
+        // Listen for typing (input event captures typing, pasting, and clearing)
+        searchInput.addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+
+            items.forEach(function(item) {
+                // Find the specific text inside the span
+                const nameSpan = item.querySelector('.brand-name');
+                const brandName = nameSpan.textContent.toLowerCase();
+
+                if (brandName.includes(searchText)) {
+                    // MATCH: Remove hidden class
+                    item.classList.remove('d-none');
+                    // Ensure d-flex is active for layout
+                    item.classList.add('d-flex'); 
+                } else {
+                    // NO MATCH: Add hidden class
+                    item.classList.add('d-none');
+                    // Remove d-flex so it doesn't take up layout space
+                    item.classList.remove('d-flex');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

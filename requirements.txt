@@ -1,0 +1,19 @@
+# Core Framework
+Django>=5.0,<6.0
+
+# Database Adapter (For PostgreSQL on Hostinger)
+psycopg2-binary>=2.9.9
+
+# Excel Upload & Management
+django-import-export>=3.3.0
+openpyxl>=3.1.2
+pandas>=2.2.0
+
+# Environment Variables (.env file support)
+python-dotenv>=1.0.0
+
+# Production Server (Required for deploying on Hostinger/VPS)
+gunicorn>=21.2.0
+
+# Static File Serving (CSS/Images in production)
+whitenoise>=6.6.0

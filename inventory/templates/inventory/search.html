@@ -1,0 +1,133 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+
+<!-- Breadcrumb / Back Button -->
+<div class="mb-3">
+    <a href="{% url 'brand_select' %}" class="text-decoration-none">&larr; Back to Brand Selection</a>
+</div>
+
+<div class="d-flex flex-column gap-2 mb-4">
+    <h4>
+        Searching in: 
+        {% for b in selected_brands %}
+            <span class="badge bg-secondary">{{ b.name }}</span>
+        {% endfor %}
+    </h4>
+
+    <!-- Search Form -->
+    <form method="get" class="d-flex gap-2">
+        <!-- CRITICAL: Keep the brand IDs in hidden fields so we don't lose them -->
+        {% for bid in brand_ids %}
+            <input type="hidden" name="brands" value="{{ bid }}">
+        {% endfor %}
+
+        <input type="text" name="q" class="form-control form-control-lg" 
+               placeholder="Scan UPC or Type Code..." 
+               value="{{ query }}" autofocus autocomplete="off">
+        
+        <button type="submit" class="btn btn-primary btn-lg px-4">Search</button>
+    </form>
+</div>
+
+<!-- Table Layout (Same as before, just kept cleaner) -->
+<div class="table-responsive bg-white rounded shadow-sm">
+    <!-- YOU MISSED THIS LINE BELOW -->
+    <table class="table table-hover align-middle mb-0">
+        
+        <thead class="table-light">
+            <tr>
+                <th>Item Code</th>
+                <th>Description</th>
+                <th class="text-center" style="width: 120px;">My Count</th>
+                <th class="text-end">Action</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td class="fw-bold text-primary">{{ p.item_code }}</td>
+                <td>
+                    {{ p.description }}<br>
+                    <small class="text-muted">UPC: {{ p.upc_code }} | {{ p.brand.name }}</small>
+                </td>
+                
+                <!-- My Count Column -->
+                <td class="text-center">
+                    {% if p.user_total > 0 %}
+                        <span class="badge bg-primary fs-6">{{ p.user_total }}</span>
+                    {% elif p.user_total < 0 %}
+                        <span class="badge bg-danger fs-6">{{ p.user_total }}</span>
+                    {% else %}
+                        <span class="text-muted small">-</span>
+                    {% endif %}
+                </td>
+
+                <td class="text-end" style="width: 120px;">
+                    <button class="btn btn-success btn-sm w-100" 
+                            onclick="openCountModal('{{ p.id }}', '{{ p.item_code }}')">
+                        Count
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted py-5">
+                    {% if query %}
+                        <h5>No items found matching "{{ query }}"</h5>
+                        <p>Try checking the selected brands or code.</p>
+                    {% else %}
+                        <h5>Ready to Scan</h5>
+                        <p>Use the search bar above to find items.</p>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    
+    </table> <!-- Closing table tag -->
+</div>
+
+
+<!-- Modal remains the same ... -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title" id="modalTitle">Item Code</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCountModal(productId, itemCode) {
+        var myModal = new bootstrap.Modal(document.getElementById('stockModal'));
+        myModal.show();
+        document.getElementById('modalTitle').innerText = itemCode;
+        var contentDiv = document.getElementById('modalContent');
+        contentDiv.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+
+        fetch(`/item/popup/${productId}/`)
+            .then(response => response.text())
+            .then(html => {
+                contentDiv.innerHTML = html;
+                setTimeout(() => {
+                    let qtyInput = contentDiv.querySelector('input[name="quantity"]');
+                    if(qtyInput) qtyInput.focus();
+                }, 500);
+            });
+    }
+
+    function setPopQty(val) {
+        var input = document.querySelector('#stockModal input[name="quantity"]');
+        if (input) input.value = val;
+    }
+</script>
+
+{% endblock %}

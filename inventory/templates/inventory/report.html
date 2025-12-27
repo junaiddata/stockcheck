@@ -1,0 +1,145 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Master Stock Report</h2>
+
+    <!-- 1. FILTER SECTION -->
+    <div class="card mb-4">
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3">
+                <!-- Search Box -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Search Item</label>
+                    <input type="text" name="q" class="form-control" placeholder="Code, Desc, UPC..." value="{{ query }}">
+                </div>
+
+                <!-- Brand Select (Scrollable List) -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Filter by Brands</label>
+                    <div class="bg-white border rounded p-2 d-flex flex-wrap gap-2" style="max-height: 100px; overflow-y: auto;">
+                        {% for brand in brands %}
+                        <div class="form-check me-2">
+                            <input class="form-check-input" type="checkbox" name="brands" value="{{ brand.id }}" id="b{{ brand.id }}"
+                                {% if brand.id in selected_brands %}checked{% endif %}>
+                            <label class="form-check-label small" for="b{{ brand.id }}">
+                                {{ brand.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. THE REPORT TABLE -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle text-center table-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-start">Item Detail</th>
+                    
+                    <!-- Add System Stock Header -->
+
+                    
+                    {% for team in teams %}
+                        <th>{{ team.username }}</th>
+                    {% endfor %}
+
+                    
+                    <th class="bg-secondary">Total Count</th>
+                                        <th class="bg-secondary">Sys Stock</th>
+                    
+                    <!-- Add Variance Header -->
+                    <th>Variance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td class="text-start">
+                        <strong>{{ row.code }}</strong><br>
+                        <small class="text-muted">{{ row.desc|truncatechars:30 }}</small><br>
+                        <span class="badge bg-light text-dark border">{{ row.brand }}</span>
+                    </td>
+                    
+                    {% for col in row.cols %}
+                    <td class="p-0">
+                        {% if col.total != 0 %}
+                            <!-- THE DRILL-DOWN LINK -->
+                            <a href="{% url 'report_detail' row.id col.user_id %}" 
+                               class="d-block w-100 h-100 text-decoration-none py-2 fw-bold text-dark"
+                               style="background-color: rgba(25, 135, 84, 0.1);"
+                               data-bs-toggle="tooltip" 
+                               title="{{ col.tooltip }}">
+                                {{ col.total }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    
+                        <td class="fw-bold bg-light border-start">{{ row.grand_total }}</td>
+
+        <td class="bg-light fw-bold text-muted border-end">
+        {{ row.system_stock }}
+    </td>
+    <!-- VARIANCE COLUMN (With Colors) -->
+                        <td class="fw-bold 
+                            {% if row.variance < 0 %}text-danger{% elif row.variance > 0 %}text-success{% else %}text-muted{% endif %}">
+                            {% if row.variance > 0 %}+{% endif %}{{ row.variance }}
+                        </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="20" class="p-5 text-center text-muted">
+                        No items found matching your filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 3. PAGINATION CONTROLS -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1&q={{ query }}{% for b in selected_brands %}&brands={{ b }}{% endfor %}">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}{% for b in selected_brands %}&brands={{ b }}{% endfor %}">Previous</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}{% for b in selected_brands %}&brands={{ b }}{% endfor %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}{% for b in selected_brands %}&brands={{ b }}{% endfor %}">Last &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<!-- Tooltip Init -->
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}

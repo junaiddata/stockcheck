@@ -1,0 +1,59 @@
+{% extends 'inventory/base.html' %}
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5>{{ product.item_code }}</h5>
+        <small>{{ product.description }}</small>
+    </div>
+    <div class="card-body">
+        <h1 class="text-center display-1 fw-bold">{{ total }}</h1>
+        <p class="text-center text-muted">Total counted by you</p>
+        
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label>Warehouse / Location</label>
+                {{ form.location }}
+            </div>
+            <div class="mb-3">
+                <label>Quantity</label>
+                {{ form.quantity }}
+            </div>
+            
+            <!-- Quick Add Buttons -->
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn btn-outline-dark flex-fill" onclick="addQty(1)">+1</button>
+                <button type="button" class="btn btn-outline-dark flex-fill" onclick="addQty(10)">+10</button>
+                <button type="button" class="btn btn-outline-dark flex-fill" onclick="addQty(50)">+50</button>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 btn-lg">ADD COUNT</button>
+        </form>
+    </div>
+</div>
+
+<h5 class="mt-4">Your History</h5>
+<ul class="list-group">
+    {% for entry in entries %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>
+            {{ entry.location }} 
+            <span class="badge bg-secondary rounded-pill ms-2">{{ entry.quantity }}</span>
+        </span>
+        
+        <!-- The Delete Button -->
+        <a href="{% url 'delete_entry' entry.id %}" 
+           class="btn btn-sm btn-outline-danger"
+           onclick="return confirm('Delete this entry? This cannot be undone.');">
+            Remove
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
+<script>
+function addQty(val) {
+    document.getElementById('id_quantity').value = val;
+}
+</script>
+{% endblock %}
