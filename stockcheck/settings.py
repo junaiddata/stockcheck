@@ -133,6 +133,9 @@ LOGOUT_REDIRECT_URL = 'login'     # <--- Goes back to login after logout
 
 STATIC_URL = 'static/'
 
+# ADD THIS LINE:
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
