@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-*hg9b6=*i^mb_9!h0m6#irfe4$vkxwm58(*@%svsjx%r9h!957
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = ['stockcheck.junaidworld.com', '31.97.75.196', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['stockcheck.junaidworld.com', '192.168.0.43','31.97.75.196', 'localhost', '127.0.0.1']
 
 
 # Application definition

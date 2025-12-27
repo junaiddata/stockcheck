@@ -1,61 +1,63 @@
-<!-- inventory/templates/inventory/popup_content.html -->
-<div class="container-fluid">
-    <div class="alert alert-info py-2">
-        <h3 class="m-0 text-center">{{ total }} <small class="fs-6">counted by you</small></h3>
+<div class="p-3">
+    <!-- Current Total Display -->
+    <div class="alert alert-light border text-center mb-3 py-2">
+        <small class="text-muted d-block uppercase">You have counted</small>
+        <span class="display-4 fw-bold {% if total < 0 %}text-danger{% else %}text-primary{% endif %}">
+            {{ total }}
+        </span>
     </div>
 
-    <!-- The Form submits to the MAIN detail view, but redirects back to Search -->
     <form action="{% url 'product_detail' product.id %}" method="post">
         {% csrf_token %}
-        
-        <!-- MAGIC TRICK: This tells the view to redirect back to the Search page after saving -->
         <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
 
-        <div class="row">
-            <div class="col-6">
-                <label class="form-label small">Location</label>
-                {{ form.location }}
+        <div class="row g-2 mb-3">
+            <div class="col-4">
+                <label class="small text-muted fw-bold">Location</label>
+                <!-- Location Input -->
+                {{ form.location }} 
+                <!-- Ensure your forms.py adds class="form-control form-control-lg" -->
             </div>
-            <div class="col-6">
-                <label class="form-label small">Qty</label>
+            <div class="col-8">
+                <label class="small text-muted fw-bold">Quantity</label>
+                <!-- Quantity Input -->
                 {{ form.quantity }}
             </div>
         </div>
 
-        <!-- Quick Buttons -->
-        <div class="d-flex gap-2 mt-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="setPopQty(1)">+1</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="setPopQty(5)">+5</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="setPopQty(10)">+10</button>
+        <!-- BIG Touch Buttons -->
+        <div class="d-flex gap-2 mb-3">
+            <button type="button" class="btn btn-outline-secondary flex-fill py-2 fw-bold" onclick="setPopQty(1)">+1</button>
+            <button type="button" class="btn btn-outline-secondary flex-fill py-2 fw-bold" onclick="setPopQty(5)">+5</button>
+            <button type="button" class="btn btn-outline-secondary flex-fill py-2 fw-bold" onclick="setPopQty(10)">+10</button>
         </div>
-
-        <button type="submit" class="btn btn-success w-100 mt-3">SAVE & CLOSE</button>
+        
+        <div class="d-flex gap-2 mb-3">
+            <!-- Add a Reset/Clear button -->
+             <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-bold" onclick="setPopQty('')">Clr</button>
+             <button type="submit" class="btn btn-success flex-grow-1 py-3 fw-bold fs-5">SAVE COUNT</button>
+        </div>
     </form>
 
     <hr>
-    <h6>History for {{ product.item_code }}</h6>
-<ul class="list-group list-group-flush small" style="max-height: 150px; overflow-y: auto;">
-    {% for entry in entries %}
-    <li class="list-group-item d-flex justify-content-between align-items-center p-1">
-        
-        <!-- Left side: Location & Quantity -->
-        <div>
-            <span class="text-muted me-2">{{ entry.location }}:</span>
-            <strong>{{ entry.quantity }}</strong>
+    
+    <h6 class="text-muted small uppercase mb-2">Recent Scans</h6>
+    <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+        {% for entry in entries %}
+        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+            <div class="d-flex align-items-center">
+                <span class="badge bg-light text-dark border me-2">{{ entry.location }}</span>
+                <span class="fw-bold fs-5">{{ entry.quantity }}</span>
+            </div>
+            
+            <a href="{% url 'delete_entry' entry.id %}" 
+               class="btn btn-sm btn-outline-danger border-0 px-3"
+               onclick="return confirm('Remove this count?');">
+                ✕
+            </a>
         </div>
-
-        <!-- Right side: Delete Button -->
-        <a href="{% url 'delete_entry' entry.id %}" 
-           class="text-danger text-decoration-none fw-bold px-2"
-           title="Delete this entry"
-           onclick="return confirm('Are you sure you want to remove this count?');">
-            &#10006; <!-- This is the HTML code for a nice 'X' symbol -->
-        </a>
-        
-    </li>
-    {% empty %}
-    <li class="list-group-item text-center text-muted">No counts yet</li>
-    {% endfor %}
-</ul>
+        {% empty %}
+        <div class="text-center text-muted small py-2">No history yet</div>
+        {% endfor %}
+    </div>
 </div>
-

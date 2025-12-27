@@ -1,14 +1,90 @@
 {% extends 'inventory/base.html' %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h3 class="text-center">Team Login</h3>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
+<style>
+    /* Custom styles just for login page to center it perfectly */
+    .login-container {
+        min-height: 80vh; /* Takes up most of the screen height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .brand-icon {
+        font-size: 3rem;
+        background: #f8f9fa;
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        text-align: center;
+        border-radius: 50%;
+        margin: 0 auto 20px auto;
+        color: #0d6efd; /* Bootstrap Primary Color */
+    }
+</style>
+
+<div class="login-container">
+    <div class="col-12 col-md-6 col-lg-4">
+        
+        <div class="text-center mb-4">
+            <h1 class="fw-bold text-dark">StockCheck</h1>
+            <p class="text-muted"> Warehouse Management</p>
+        </div>
+
+        <div class="card login-card p-4 bg-white">
+            <div class="card-body">
+                <!-- Icon -->
+                <div class="brand-icon">
+                  <img src="https://store.junaidworld.com/wp-content/uploads/2025/04/Copy-of-Copy-of-material-logo.pdf-1-600x169.png" 
+                    alt="StockCheck Logo" class="img-fluid mb-3" style="max-width: 200px;">
+                </div>
+
+                
+                <h4 class="text-center mb-4 fw-bold">Team Login</h4>
+
+                <!-- Error Messages -->
+                {% if form.errors %}
+                <div class="alert alert-danger py-2 text-center small">
+                    Invalid username or password.
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- We render inputs manually to use Bootstrap 'form-floating' classes -->
+                    
+                    <!-- USERNAME -->
+                    <div class="form-floating mb-3">
+                        <input type="text" name="username" class="form-control form-control-lg" 
+                               id="id_username" placeholder="Username" required autofocus>
+                        <label for="id_username">Username</label>
+                    </div>
+
+                    <!-- PASSWORD -->
+                    <div class="form-floating mb-4">
+                        <input type="password" name="password" class="form-control form-control-lg" 
+                               id="id_password" placeholder="Password" required>
+                        <label for="id_password">Password</label>
+                    </div>
+
+                    <!-- LOGIN BUTTON -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm">
+                            SIGN IN &rarr;
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <small class="text-muted">Need an account? Contact the Warehouse Admin.</small>
         </div>
     </div>
 </div>

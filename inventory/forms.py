@@ -6,6 +6,6 @@ class StockEntryForm(forms.ModelForm):
         model = StockEntry
         fields = ['quantity', 'location']
         widgets = {
-            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Qty (e.g. 10)'}),
-            'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Warehouse'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control form-control-lg', 'placeholder': 'Qty'}),
+            'location': forms.TextInput(attrs={'class': 'form-control form-control-lg', 'placeholder': 'WH'}),
         }
