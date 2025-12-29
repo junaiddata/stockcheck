@@ -45,8 +45,13 @@ def product_search(request):
             user_total=Coalesce(
                 Sum('entries__quantity', filter=Q(entries__user=request.user)), 
                 Value(0)
+            ),
+            # NEW: Calculate damaged sum
+            user_damaged=Coalesce(
+                Sum('entries__damaged_quantity', filter=Q(entries__user=request.user)), 
+                Value(0)
             )
-        )
+        ).order_by('-user_total', 'item_code')
 
         # 3. Limit to 100 for performance
         products = products[:100]
@@ -91,22 +96,24 @@ def product_detail(request, product_id):
         'product': product, 'form': form, 'entries': user_entries, 'total': total
     })
 
-# --- NEW FUNCTION FOR THE POPUP ---
 @login_required
 def product_popup(request, product_id):
-    """
-    This view renders ONLY the form and history, 
-    no navigation bar, for use inside the Modal.
-    """
     product = get_object_or_404(Product, id=product_id)
     user_entries = StockEntry.objects.filter(product=product, user=request.user).order_by('-timestamp')
-    total = user_entries.aggregate(Sum('quantity'))['quantity__sum'] or 0
-    initial_loc = request.session.get('last_location', '')
     
+    # Calculate both totals
+    total_good = user_entries.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total_damaged = user_entries.aggregate(Sum('damaged_quantity'))['damaged_quantity__sum'] or 0
+    
+    initial_loc = request.session.get('last_location', '')
     form = StockEntryForm(initial={'location': initial_loc})
     
     return render(request, 'inventory/popup_content.html', {
-        'product': product, 'form': form, 'entries': user_entries, 'total': total
+        'product': product, 
+        'form': form, 
+        'entries': user_entries, 
+        'total': total_good,
+        'total_damaged': total_damaged # Pass this to template
     })
 
 from django.core.paginator import Paginator
@@ -157,30 +164,31 @@ def master_report(request):
             'cols': []
         }
         
-        grand_total = 0
+        # 1. Get all entries for this product
+        entries = p.entries.all() 
         
-        # We manually filter the pre-fetched entries or query efficiently
-        # For simplicity and speed on small page sizes, we can filter direct from DB 
-        # or use the reverse relation if prefetched. 
-        # Let's use direct efficient filtering on the related set:
+        # 2. Calculate Totals
+        # Sum of Good Quantity (Existing)
+        grand_total = sum(e.quantity for e in entries)
         
-        entries = p.entries.all() # Relies on prefetch_related in production optimization
-        
+        # NEW: Sum of Damaged Quantity
+        grand_damaged = sum(e.damaged_quantity for e in entries)
+
         for team in teams:
-            # Python-side filter is fast enough for 50 rows * 8 teams
             team_entries = [e for e in entries if e.user_id == team.id]
             team_total = sum(e.quantity for e in team_entries)
-            grand_total += team_total
             
+            # Note: We are NOT showing damaged per team in the columns, just the total at the end
             row['cols'].append({
-                'user_id': team.id, # We need this for the link
+                'user_id': team.id,
                 'total': team_total,
-                # We still keep the tooltip for quick viewing
-                'tooltip': " + ".join([f"{e.quantity}({e.location})" for e in team_entries])
+                'tooltip': " + ".join([f"{e.quantity}" for e in team_entries])
             })
             
         row['grand_total'] = grand_total
-        row['variance'] = grand_total - p.system_stock
+        row['total_damaged'] = grand_damaged  # <--- Pass this to the template
+        row['variance'] = grand_total - p.system_stock # Variance ignores damaged
+        
         products_with_data.append(row)
 
     return render(request, 'inventory/report.html', {
@@ -192,11 +200,7 @@ def master_report(request):
         'query': query,
     })
 
-@user_passes_test(lambda u: u.is_staff)
 def report_detail(request, product_id, user_id):
-    """
-    Drill-down view: Shows every single scan for a specific Item + Team
-    """
     product = get_object_or_404(Product, id=product_id)
     target_user = get_object_or_404(User, id=user_id)
     
@@ -205,13 +209,22 @@ def report_detail(request, product_id, user_id):
         user=target_user
     ).order_by('-timestamp')
     
-    total = entries.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    # Calculate BOTH totals
+    # We use a dictionary unpacking trick to get both sums in one query
+    aggregates = entries.aggregate(
+        sum_good=Sum('quantity'),
+        sum_damaged=Sum('damaged_quantity')
+    )
+    
+    total = aggregates['sum_good'] or 0
+    total_damaged = aggregates['sum_damaged'] or 0
     
     return render(request, 'inventory/report_detail.html', {
         'product': product,
         'target_user': target_user,
         'entries': entries,
-        'total': total
+        'total': total,
+        'total_damaged': total_damaged, # Pass this new variable
     })
 
 

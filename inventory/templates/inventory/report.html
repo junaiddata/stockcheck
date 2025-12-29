@@ -8,13 +8,11 @@
     <div class="card mb-4">
         <div class="card-body bg-light">
             <form method="get" class="row g-3">
-                <!-- Search Box -->
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Search Item</label>
                     <input type="text" name="q" class="form-control" placeholder="Code, Desc, UPC..." value="{{ query }}">
                 </div>
 
-                <!-- Brand Select (Scrollable List) -->
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Filter by Brands</label>
                     <div class="bg-white border rounded p-2 d-flex flex-wrap gap-2" style="max-height: 100px; overflow-y: auto;">
@@ -44,18 +42,16 @@
                 <tr>
                     <th class="text-start">Item Detail</th>
                     
-                    <!-- Add System Stock Header -->
-
-                    
                     {% for team in teams %}
                         <th>{{ team.username }}</th>
                     {% endfor %}
 
-                    
                     <th class="bg-secondary">Total Count</th>
-                                        <th class="bg-secondary">Sys Stock</th>
                     
-                    <!-- Add Variance Header -->
+                    <!-- NEW COLUMN: Total Damaged -->
+                    <th class="text-danger bg-dark border-start">Total Dmg</th>
+                    
+                    <th class="bg-secondary">Sys Stock</th>
                     <th>Variance</th>
                 </tr>
             </thead>
@@ -71,7 +67,6 @@
                     {% for col in row.cols %}
                     <td class="p-0">
                         {% if col.total != 0 %}
-                            <!-- THE DRILL-DOWN LINK -->
                             <a href="{% url 'report_detail' row.id col.user_id %}" 
                                class="d-block w-100 h-100 text-decoration-none py-2 fw-bold text-dark"
                                style="background-color: rgba(25, 135, 84, 0.1);"
@@ -85,20 +80,32 @@
                     </td>
                     {% endfor %}
                     
-                        <td class="fw-bold bg-light border-start">{{ row.grand_total }}</td>
+                    <!-- Total Good Count -->
+                    <td class="fw-bold bg-light border-start">{{ row.grand_total }}</td>
 
-        <td class="bg-light fw-bold text-muted border-end">
-        {{ row.system_stock }}
-    </td>
-    <!-- VARIANCE COLUMN (With Colors) -->
-                        <td class="fw-bold 
-                            {% if row.variance < 0 %}text-danger{% elif row.variance > 0 %}text-success{% else %}text-muted{% endif %}">
-                            {% if row.variance > 0 %}+{% endif %}{{ row.variance }}
-                        </td>
+                    <!-- NEW COLUMN DATA: Total Damaged -->
+                    <td class="fw-bold text-danger border-start border-end">
+                        {% if row.total_damaged > 0 %}
+                            {{ row.total_damaged }}
+                        {% else %}
+                            <span class="text-muted fw-normal">-</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- System Stock -->
+                    <td class="bg-light fw-bold text-muted border-end">
+                        {{ row.system_stock }}
+                    </td>
+
+                    <!-- Variance -->
+                    <td class="fw-bold 
+                        {% if row.variance < 0 %}text-danger{% elif row.variance > 0 %}text-success{% else %}text-muted{% endif %}">
+                        {% if row.variance > 0 %}+{% endif %}{{ row.variance }}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="20" class="p-5 text-center text-muted">
+                    <td colspan="25" class="p-5 text-center text-muted">
                         No items found matching your filters.
                     </td>
                 </tr>
@@ -135,7 +142,6 @@
     </nav>
 </div>
 
-<!-- Tooltip Init -->
 <script>
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {

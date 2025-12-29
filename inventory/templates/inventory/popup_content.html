@@ -1,31 +1,39 @@
 <div class="p-3">
-    <!-- Current Total Display -->
-    <div class="alert alert-light border text-center mb-3 py-2">
-        <small class="text-muted d-block uppercase">You have counted</small>
-        <span class="display-4 fw-bold {% if total < 0 %}text-danger{% else %}text-primary{% endif %}">
-            {{ total }}
-        </span>
+    <!-- HEADER: Show Good vs Damaged Totals -->
+    <div id="popup-header" class="d-flex gap-2 mb-3">
+        <div class="alert alert-light border text-center flex-fill py-2 mb-0">
+            <small class="text-muted d-block uppercase">Total</small>
+            <span class="display-6 fw-bold text-primary">{{ total }}</span>
+        </div>
+        <div class="alert alert-light border border-danger text-center flex-fill py-2 mb-0">
+            <small class="text-danger d-block uppercase">Damaged</small>
+            <span class="display-6 fw-bold text-danger">{{ total_damaged }}</span>
+        </div>
     </div>
 
     <form action="{% url 'product_detail' product.id %}" method="post">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
 
+        <!-- LOCATION -->
+        <div class="mb-2">
+            <label class="small text-muted fw-bold">Location</label>
+            {{ form.location }}
+        </div>
+
+        <!-- QUANTITY INPUTS ROW -->
         <div class="row g-2 mb-3">
-            <div class="col-4">
-                <label class="small text-muted fw-bold">Location</label>
-                <!-- Location Input -->
-                {{ form.location }} 
-                <!-- Ensure your forms.py adds class="form-control form-control-lg" -->
-            </div>
-            <div class="col-8">
-                <label class="small text-muted fw-bold">Quantity</label>
-                <!-- Quantity Input -->
+            <div class="col-6">
+                <label class="small text-primary fw-bold">Qty</label>
                 {{ form.quantity }}
+            </div>
+            <div class="col-6">
+                <label class="small text-danger fw-bold">Damaged Qty</label>
+                {{ form.damaged_quantity }}
             </div>
         </div>
 
-        <!-- BIG Touch Buttons -->
+        <!-- QUICK BUTTONS (Only for Good Qty usually, but we can stick to general) -->
         <div class="d-flex gap-2 mb-3">
             <button type="button" class="btn btn-outline-secondary flex-fill py-2 fw-bold" onclick="setPopQty(1)">+1</button>
             <button type="button" class="btn btn-outline-secondary flex-fill py-2 fw-bold" onclick="setPopQty(5)">+5</button>
@@ -33,31 +41,51 @@
         </div>
         
         <div class="d-flex gap-2 mb-3">
-            <!-- Add a Reset/Clear button -->
-             <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-bold" onclick="setPopQty('')">Clr</button>
-             <button type="submit" class="btn btn-success flex-grow-1 py-3 fw-bold fs-5">SAVE COUNT</button>
+             <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-bold" onclick="clearInputs()">Clr</button>
+             <button type="submit" class="btn btn-success flex-grow-1 py-3 fw-bold fs-5">SAVE</button>
         </div>
     </form>
 
     <hr>
     
-    <h6 class="text-muted small uppercase mb-2">Recent Scans</h6>
-    <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
-        {% for entry in entries %}
-        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-            <div class="d-flex align-items-center">
-                <span class="badge bg-light text-dark border me-2">{{ entry.location }}</span>
-                <span class="fw-bold fs-5">{{ entry.quantity }}</span>
+    <!-- HISTORY LIST -->
+    <div id="popup-history">
+        <h6 class="text-muted small uppercase mb-2">Recent Scans</h6>
+        <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+            {% for entry in entries %}
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark border me-2">{{ entry.location }}</span>
+                    <div>
+                        {% if entry.quantity > 0 %}
+                        <span class="text-primary fw-bold me-2">G: {{ entry.quantity }}</span>
+                        {% endif %}
+                        {% if entry.damaged_quantity > 0 %}
+                        <span class="text-danger fw-bold">D: {{ entry.damaged_quantity }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <a href="{% url 'delete_entry' entry.id %}" 
+                   class="btn btn-sm btn-outline-danger border-0 px-3"
+                   onclick="return confirm('Remove this count?');">✕</a>
             </div>
-            
-            <a href="{% url 'delete_entry' entry.id %}" 
-               class="btn btn-sm btn-outline-danger border-0 px-3"
-               onclick="return confirm('Remove this count?');">
-                ✕
-            </a>
+            {% empty %}
+            <div class="text-center text-muted small py-2">No history yet</div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="text-center text-muted small py-2">No history yet</div>
-        {% endfor %}
     </div>
 </div>
+
+<script>
+    // Helper to set quantity for Good items only (Standard workflow)
+    function setPopQty(val) {
+        var input = document.querySelector('input[name="quantity"]');
+        if (input) input.value = val;
+    }
+    
+    function clearInputs() {
+        document.querySelector('input[name="quantity"]').value = '';
+        document.querySelector('input[name="damaged_quantity"]').value = '';
+    }
+</script>

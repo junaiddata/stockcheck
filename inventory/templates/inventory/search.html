@@ -45,12 +45,16 @@
                     <small class="text-muted">UPC: {{ p.upc_code }}</small>
                 </td>
                 <td class="text-center">
+                    <!-- Good Count -->
                     {% if p.user_total > 0 %}
                         <span class="badge bg-primary fs-6">{{ p.user_total }}</span>
-                    {% elif p.user_total < 0 %}
-                        <span class="badge bg-danger fs-6">{{ p.user_total }}</span>
                     {% else %}
                         <span class="text-muted small">-</span>
+                    {% endif %}
+
+                    <!-- Damaged Count (Only show if exists) -->
+                    {% if p.user_damaged > 0 %}
+                        <br><span class="badge bg-danger fs-6 mt-1">{{ p.user_damaged }} Dmg</span>
                     {% endif %}
                 </td>
                 <td class="text-end">
