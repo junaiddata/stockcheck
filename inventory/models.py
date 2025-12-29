@@ -26,6 +26,7 @@ class StockEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quantity = models.IntegerField() 
     damaged_quantity = models.IntegerField(default=0)
+    photo = models.ImageField(upload_to='evidence/', blank=True, null=True)
     location = models.CharField(max_length=50) # Warehouse/Shelf
     timestamp = models.DateTimeField(auto_now_add=True)
 

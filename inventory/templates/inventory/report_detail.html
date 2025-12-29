@@ -43,6 +43,7 @@
                             <th>Qty</th>
                             <!-- New Column -->
                             <th class="text-danger">Damaged</th>
+                            <th>Photo</th> <!-- New Header -->
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -69,7 +70,17 @@
                                     <span class="text-muted fw-normal">-</span>
                                 {% endif %}
                             </td>
-
+                                    <!-- PHOTO COLUMN -->
+                            <td>
+                                {% if entry.photo %}
+                                    <!-- Link to open full size, showing a small thumbnail -->
+                                    <a href="{{ entry.photo.url }}" target="_blank">
+                                        <img src="{{ entry.photo.url }}" style="height: 40px; width: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <a href="{% url 'delete_entry' entry.id %}" 
                                    class="btn btn-sm btn-outline-danger"

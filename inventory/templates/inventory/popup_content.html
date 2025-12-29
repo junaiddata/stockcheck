@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form action="{% url 'product_detail' product.id %}" method="post">
+    <form action="{% url 'product_detail' product.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
 
@@ -30,6 +30,10 @@
             <div class="col-6">
                 <label class="small text-danger fw-bold">Damaged Qty</label>
                 {{ form.damaged_quantity }}
+            </div>
+                <div class="mb-3">
+                <label class="small text-muted fw-bold">📷 Add Photo (Damaged)</label>
+                {{ form.photo }}
             </div>
         </div>
 

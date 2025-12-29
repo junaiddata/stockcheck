@@ -74,7 +74,7 @@ def product_detail(request, product_id):
     initial_loc = request.session.get('last_location', '')
 
     if request.method == 'POST':
-        form = StockEntryForm(request.POST)
+        form = StockEntryForm(request.POST,request.FILES)
         if form.is_valid():
             entry = form.save(commit=False)
             entry.product = product
