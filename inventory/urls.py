@@ -13,5 +13,6 @@ urlpatterns = [
     path('item/popup/<int:product_id>/', views.product_popup, name='product_popup'),
     path('delete/<int:entry_id>/', views.delete_entry, name='delete_entry'),
        path('report/history/<int:product_id>/<int:user_id>/', views.report_detail, name='report_detail'),
+       path('report/export/', views.export_report, name='export_report'),
 ]
 

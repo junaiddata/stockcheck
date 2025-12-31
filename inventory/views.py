@@ -200,6 +200,89 @@ def master_report(request):
         'query': query,
     })
 
+
+import openpyxl
+from django.http import HttpResponse
+
+@user_passes_test(lambda u: u.is_staff)
+def export_report(request):
+    # 1. SETUP: Get Teams and Base Query
+    teams = User.objects.exclude(is_superuser=True).order_by('username')
+    products = Product.objects.all().order_by('item_code')
+
+    # 2. APPLY EXACT SAME FILTERS AS MASTER_REPORT
+    
+    # Filter by Brand
+    selected_brand_ids = request.GET.getlist('brands')
+    if selected_brand_ids:
+        products = products.filter(brand__id__in=selected_brand_ids)
+
+    # Filter by Search Query
+    query = request.GET.get('q', '')
+    if query:
+        products = products.filter(
+            models.Q(item_code__icontains=query) | 
+            models.Q(description__icontains=query) |
+            models.Q(upc_code__icontains=query)
+        )
+
+    # Optimization: Prefetch entries to avoid N+1 query problem
+    # This makes the export much faster
+    products = products.prefetch_related('entries')
+
+    # 3. CREATE EXCEL FILE
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Stock Report"
+
+    # 4. CREATE HEADERS
+    headers = ['Item Code', 'Description', 'Brand', 'System Stock']
+    # Add a column for each team dynamically
+    for team in teams:
+        headers.append(f"{team.username}")
+    
+    headers.extend(['Total Count', 'Total Damaged', 'Variance'])
+    ws.append(headers)
+
+    # 5. LOOP DATA AND WRITE ROWS
+    for p in products:
+        # Get all entries for this product (cached by prefetch)
+        entries = list(p.entries.all())
+        
+        # Calculate Grand Totals
+        grand_total = sum(e.quantity for e in entries)
+        grand_damaged = sum(e.damaged_quantity for e in entries)
+        variance = grand_total - p.system_stock
+
+        # Start the row data
+        row = [
+            p.item_code, 
+            p.description, 
+            p.brand.name, 
+            p.system_stock
+        ]
+
+        # Calculate per-team counts
+        for team in teams:
+            # Filter entries for this specific team in Python (fast)
+            team_qty = sum(e.quantity for e in entries if e.user_id == team.id)
+            row.append(team_qty)
+
+        # Add final totals
+        row.extend([grand_total, grand_damaged, variance])
+        
+        # Write to Excel
+        ws.append(row)
+
+    # 6. RETURN AS DOWNLOADABLE FILE
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=Stock_Check_Report.xlsx'
+    
+    wb.save(response)
+    return response
+
 def report_detail(request, product_id, user_id):
     product = get_object_or_404(Product, id=product_id)
     target_user = get_object_or_404(User, id=user_id)

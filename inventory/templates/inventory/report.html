@@ -30,6 +30,12 @@
 
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+
+                        <button type="submit" 
+                            formaction="{% url 'export_report' %}" 
+                            class="btn btn-success w-100">
+                        Export Excel
+                    </button>
                 </div>
             </form>
         </div>
